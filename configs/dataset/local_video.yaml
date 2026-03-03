@@ -1,0 +1,10 @@
+name: local_video
+
+# Local loader inputs (choose either video_path / episode_videos / episodes_files)
+video_path: ""
+episode_videos: []
+episodes_files: []
+
+instruction: ""
+num_frames: 20
+num_context_episodes: 0

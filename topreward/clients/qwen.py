@@ -18,7 +18,7 @@ from topreward.utils.images import to_pil
 class QwenClient(BaseModelClient):
     def __init__(
         self,
-        model_name: str = "Qwen/Qwen3-VL-4B-Instruct",
+        model_name: str = "Qwen/Qwen3-VL-8B-Instruct",
         rpm: float = 0.0,
         max_input_length: int = 32768,
     ):

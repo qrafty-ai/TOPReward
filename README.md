@@ -153,6 +153,18 @@ PYTHONPATH=. uv run python3 -m topreward.scripts.predict --config-dir configs/ex
   model=gemini dataset=berkeleymvp data_loader=huggingface model.temperature=0.5
 ```
 
+Run TOPReward on a single local video directly (no frame extraction step):
+```bash
+topreward/scripts/run_predict.sh --config-name predict_topreward \
+  data_loader=local \
+  dataset=local_video \
+  dataset.video_path=/absolute/path/to/video.mp4 \
+  dataset.instruction="open the drawer" \
+  prediction.num_examples=1 \
+  prediction.output_dir=./results/local_video_topreward
+```
+
+
 ---
 
 ## Extending TOPReward

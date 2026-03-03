@@ -1,10 +1,12 @@
 _target_: topreward.data_loaders.local.LocalDataLoader
 
 episodes_files: ${dataset.episodes_files}
+video_path: ${dataset.video_path}
+episode_videos: ${dataset.episode_videos}
 instruction: ${dataset.instruction}
 
-num_frames: ${dataset.num_frames:20}
-num_context_episodes: ${dataset.num_context_episodes:0}
+num_frames: ${dataset.num_frames}
+num_context_episodes: ${dataset.num_context_episodes}
 shuffle: ${shuffle}
 seed: ${seed}
 sampling_method: ${sampling_method}
