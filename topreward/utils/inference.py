@@ -254,7 +254,7 @@ def compute_instruction_reward_on_fewshot_input(
     ):
         logger.info(f"  First {length:3d} frames: reward = {r:8.4f} (normalized: {norm_r:.4f})")
 
-    logger.success(f"Example {idx}: instruction_reward={result.reward:.4f} (tokens={result.token_count}, reduction={reduction}, fps={fps:.2f})")
+    logger.success(f"Example {idx}: topreward={result.reward:.4f} (tokens={result.token_count}, reduction={reduction}, fps={fps:.2f})")
 
     # Compute VOC: Spearman correlation between normalized rewards
     # and ground truth completion rates aligned to prefix lengths.

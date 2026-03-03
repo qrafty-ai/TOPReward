@@ -7,8 +7,8 @@ Thank you for your interest in contributing to TOPReward. This guide covers how 
 **Prerequisites:** Python 3.11+, [`uv`](https://github.com/astral-sh/uv)
 
 ```bash
-git clone https://github.com/jcoleharrison/instruction_gvl.git
-cd instruction_gvl
+git clone https://github.com/TOPReward/TOPReward.git
+cd TOPReward
 make sync          # Install dependencies via uv
 cp .env.example .env
 # Fill in API keys in .env
@@ -35,6 +35,7 @@ uv run pytest tests/test_voc_score.py::test_name -v
 - Formatter: Black + Ruff + isort — run `make format` before committing
 - Python 3.11+ type annotations are encouraged for new code
 
+
 ## Adding New Components
 
 ### New Model Client
@@ -58,7 +59,7 @@ Create `configs/dataset/my_dataset.yaml` with:
 2. Implement `extract_percentages(self, model_response: str) -> list[float]`
 3. Add `configs/mapper/my_mapper.yaml`
 
-See `CLAUDE.md` for detailed architecture documentation.
+See [README.md](README.md) for architecture and usage details.
 
 ## Submitting Changes
 
