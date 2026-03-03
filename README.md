@@ -4,7 +4,10 @@
 [![Website](https://img.shields.io/badge/Website-topreward.github.io-green)](https://topreward.github.io/webpage/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Shirui Chen, Cole Harrison, Ying-Chun Lee, Angela Jin Yang, Zhongzheng Ren, Lillian J. Ratliff, Jiafei Duan, Dieter Fox, Ranjay Krishna**
+<!-- cspell:disable-next-line -->
+**Shirui Chen, Cole Harrison, Ying-Chun Lee, Angela Jin Yang, Zhongzheng Ren, Lillian J. Ratliff, Jiafei Duan\*, Dieter Fox\*, Ranjay Krishna\***
+
+<sup>*Equal advising</sup>
 
 TOPReward is a reward modeling method that uses token probabilities from vision-language models (VLMs) as zero-shot reward signals for robotics. By computing the log-likelihood that a model assigns to a task instruction given a video trajectory, TOPReward provides scalable, annotation-free reward estimation for robot learning and data curation.
 
@@ -233,12 +236,10 @@ PYTHONPATH=. uv run python3 -m topreward.scripts.predict \
 If you use TOPReward in your research, please cite:
 
 ```bibtex
-@inproceedings{chen2026topreward,
+@article{chen2026topreward,
   title={TOPReward: Token Probabilities as Hidden Zero-Shot Rewards for Robotics},
-  author={Shirui Chen and Cole Harrison and Ying-Chun Lee and Angela Jin Yang and
-          Zhongzheng Ren and Lillian J. Ratliff and Jiafei Duan and Dieter Fox and
-          Ranjay Krishna},
-  booktitle={International Conference on Machine Learning},
+  author={Chen, Shirui and Harrison, Cole and Lee, Ying-Chun and Yang, Angela Jin and Ren, Zhongzheng and Ratliff, Lillian J and Duan, Jiafei and Fox, Dieter and Krishna, Ranjay},
+  journal={arXiv preprint arXiv:2602.19313},
   year={2026}
 }
 ```
