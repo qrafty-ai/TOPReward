@@ -43,7 +43,7 @@ class InstructionRewardResult:
     def to_metric_result(self) -> MetricResult:
         """Convert to standard MetricResult format."""
         return MetricResult(
-            name="instruction_reward",
+            name="topreward",
             value=self.reward,
             details={
                 "reduction": self.reduction,

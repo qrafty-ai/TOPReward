@@ -8,7 +8,7 @@ Steps:
 
 Supports two methods:
 - gvl: Generative Value Learning (predicts task completion percentages)
-- instruction_reward: Log-likelihood reward for instruction matching
+- topreward: Log-likelihood reward for instruction matching
 """
 
 import json
@@ -35,7 +35,7 @@ from topreward.utils.logging_config import setup_logging
 @hydra.main(
     version_base=None,
     config_path="../../configs",
-    config_name="experiments/predict",
+    config_name="experiments/predict_gvl",
 )
 def main(config: DictConfig) -> None:
     """Main prediction script entry point."""
@@ -51,12 +51,14 @@ def main(config: DictConfig) -> None:
     client: BaseModelClient = instantiate(config.model)
     prompt_template: str = config.prompts.template
 
-    # Get prediction method (gvl or instruction_reward)
+    # Get prediction method (gvl or topreward). Keep
+    # `instruction_reward` as a backward-compatible alias.
     method = str(config.prediction.get("method", "gvl")).lower()
-    if method not in ("gvl", "instruction_reward"):
-        raise ValueError(f"Unknown prediction method: {method}. Use 'gvl' or 'instruction_reward'.")
 
-    # Only instantiate mapper for gvl method (instruction_reward doesn't
+    if method not in ("gvl", "topreward"):
+        raise ValueError(f"Unknown prediction method: {method}. Use 'gvl' or 'topreward'.")
+
+    # Only instantiate mapper for gvl method (topreward doesn't
     # need it)
     mapper: BaseMapper | None = None
     if method == "gvl":
@@ -144,7 +146,7 @@ def main(config: DictConfig) -> None:
         with output_path.open("w", encoding="utf-8"):
             pass
 
-    # Instruction reward specific config
+    # TOPReward-specific config
     ir_reduction = str(config.prediction.get("reduction", "mean"))
     ir_use_video_description = bool(config.prediction.get("use_video_description", False))
     ir_use_subsampled_video = bool(config.prediction.get("use_subsampled_video", False))
@@ -193,7 +195,7 @@ def main(config: DictConfig) -> None:
                 ctx_ep.all_frames = None
             record.raw_response = None  # Also clear raw response if saved
 
-        else:  # instruction_reward
+        else:  # topreward
             ex = data_loader.load_fewshot_input()
             record = infer_utils.compute_instruction_reward_on_fewshot_input(
                 idx,
@@ -247,8 +249,8 @@ def main(config: DictConfig) -> None:
         summary["num_examples_used_for_metrics"] = dataset_metrics.total_examples
         summary["metrics"] = dataset_metrics.to_dict()
         summary["prompt_type"] = config.prompts.name
-    else:  # instruction_reward
-        # Compute aggregate stats for instruction reward
+    else:  # topreward
+        # Compute aggregate stats for TOPReward
         valid_records = [r for r in records if r.error is None]
         error_records = [r for r in records if r.error is not None]
         rewards = [r.reward for r in valid_records]
@@ -270,8 +272,7 @@ def main(config: DictConfig) -> None:
         else:
             min_normalized = max_normalized = float("nan")
 
-        # Collect per-record VOC scores (already computed in
-        # compute_instruction_reward_on_fewshot_input)
+        # Collect per-record VOC scores (already computed in TOPReward path)
         voc_scores = [r.voc for r in valid_records if r.voc is not None]
         if voc_scores:
             mean_voc = float(np.mean(voc_scores))
@@ -282,7 +283,7 @@ def main(config: DictConfig) -> None:
             mean_voc = std_voc = min_voc = max_voc = float("nan")
 
         logger.success(
-            f"Instruction reward metrics: "
+            f"TOPReward metrics: "
             f"valid={len(valid_records)}/{len(records)} "
             f"mean={mean_reward:.4f} std={std_reward:.4f} "
             f"range=[{min_reward:.4f}, {max_reward:.4f}]"
@@ -300,12 +301,10 @@ def main(config: DictConfig) -> None:
         summary["valid_count"] = len(valid_records)
         summary["error_count"] = len(error_records)
         summary["metrics"] = {
-            "instruction_reward_mean": mean_reward,
-            "instruction_reward_std": std_reward,
-            "instruction_reward_min": min_reward,
-            "instruction_reward_max": max_reward,
-            "normalized_reward_min": min_normalized,
-            "normalized_reward_max": max_normalized,
+            "topreward_mean": mean_reward,
+            "topreward_std": std_reward,
+            "topreward_min": min_reward,
+            "topreward_max": max_reward,
             "voc_mean": mean_voc,
             "voc_std": std_voc,
             "voc_min": min_voc,

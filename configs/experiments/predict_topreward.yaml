@@ -12,13 +12,13 @@ seed: 42          # Global seed (propagated to loader & any RNG-dependent logic)
 shuffle: true       # Whether to shuffle frame presentation order
 sampling_method: uniform  # Frame sampling method: 'random', 'uniform', 'gauss', 'heavy_left_tail', 'heavy_right_tail'
 anchoring: first   # Anchoring method for frame sampling: 'first', 'last', 'middle'
-#Anchoring not applied for method 'instruction_reward'
+# Anchoring not applied for method 'topreward'
 
 dataset:
   num_frames: 15
 
 prediction:
-  method: instruction_reward      # Prediction method: 'gvl' (task completion %) or 'instruction_reward' (log-likelihood)
+  method: topreward      # Prediction method: 'gvl' (task completion %) or 'topreward' (log-likelihood)
   num_examples: 20         # How many FewShotInput predictions to perform
   eval_all_episodes: false # If true, override num_examples with total episodes loaded by the data loader
   save_raw: true           # Whether to dump raw model outputs
@@ -27,10 +27,10 @@ prediction:
   resume_from_index: null  # Resume from this global index (0-based), reducing effective num_examples
   resume_from_path: null   # Append to an existing predictions JSONL (relative to output_dir if not absolute)
 
-  # instruction_reward specific options:
-  reduction: mean          # Reduction for instruction reward: 'mean' or 'sum'
+  # TOPReward-specific options:
+  reduction: mean          # Reduction for TOPReward: 'mean' or 'sum'
   use_video_description: false  # If true, generate trajectory description before computing reward
-  use_subsampled_video: false  # If true, use subsampled video for instruction reward computation
+  use_subsampled_video: false  # If true, use subsampled video for TOPReward computation
   use_video_input: true    # If true (Gemini only), send frames as video. If false, send as individual images
   add_chat_template: false # If true (Qwen only), wrap instruction prompt with chat template during scoring
 

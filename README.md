@@ -31,6 +31,7 @@ The codebase supports two prediction methods:
   - [Quick Start](#quick-start)
     - [GVL Prediction](#gvl-prediction)
     - [TOPReward Prediction](#topreward-prediction)
+    - [Single Runner Script](#single-runner-script)
   - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
@@ -63,9 +64,25 @@ HYDRA_FULL_ERROR=1 PYTHONPATH=. uv run python3 -m topreward.scripts.predict \
 ```bash
 HYDRA_FULL_ERROR=1 PYTHONPATH=. uv run python3 -m topreward.scripts.predict \
   --config-dir configs/experiments \
-  --config-name predict_instruction_reward \
+  --config-name predict_topreward \
   model=qwen
 ```
+
+### Single Runner Script
+
+If you prefer one shell entrypoint, use:
+
+```bash
+topreward/scripts/run_predict.sh --config-name predict_gvl dataset=nyudoor model=gemini
+topreward/scripts/run_predict.sh --config-name predict_topreward dataset=austin_sirius_dataset model=qwen prediction.add_chat_template=true
+```
+
+The script selects an experiment config by name and forwards all remaining arguments as Hydra overrides.
+
+Common override types:
+- Group selection: `dataset=... model=... data_loader=... mapper=... prompts=...`
+- Scalar values: `prediction.num_examples=20 prediction.output_dir=./results model.model_name=...`
+- Booleans: `prediction.add_chat_template=true prediction.use_video_description=false`
 
 Results are saved under `outputs/DATE_TIME/` with predictions, raw outputs, and metrics.
 
@@ -82,8 +99,8 @@ Tip: you can override any config at the CLI, e.g. `model.temperature=0.5`.
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/jcoleharrison/instruction_gvl.git
-   cd instruction_gvl
+   git clone https://github.com/TOPReward/TOPReward.git
+   cd TOPReward
    ```
 
 2. Create and activate a Conda environment, then install ffmpeg:
@@ -189,7 +206,7 @@ rpm: 15  # requests per minute (rate limiter)
 ```bash
 PYTHONPATH=. uv run python3 -m topreward.scripts.predict \
   --config-dir configs/experiments \
-  --config-name predict \
+  --config-name predict_gvl \
   model=my_model
 ```
 ---
@@ -213,7 +230,7 @@ Then choose a loader (e.g., Hugging Face) in your experiment or via CLI:
 ```bash
 PYTHONPATH=. uv run python3 -m topreward.scripts.predict \
   --config-dir configs/experiments \
-  --config-name predict \
+  --config-name predict_gvl \
   dataset=my_dataset data_loader=huggingface
 ```
 
@@ -248,8 +265,9 @@ If you use TOPReward in your research, please cite:
 
 ## Acknowledgements
 
-TOPReward builds on [GVL (Generative Value Learning)](https://github.com/budzianowski/opengvl)
-by Budzianowski et al. We thank the GVL authors for their open-source baseline.
+TOPReward builds on [OpenGVL / GVL (Generative Value Learning)](https://github.com/budzianowski/opengvl).
+We reuse and adapt substantial portions of that implementation throughout this repository, and thank the OpenGVL authors:
+Paweł Budzianowski, Emilia Wiśnios, Gracjan Góral, Michał Tyrolski, Igor Kulakov, Viktor Petrenko, and Krzysztof Walas.
 
 Video processing utilities in `topreward/utils/video_utils.py` are adapted from
 [LeRobot](https://github.com/huggingface/lerobot) (HuggingFace), licensed under Apache 2.0.

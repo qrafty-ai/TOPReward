@@ -1,3 +1,9 @@
 _target_: topreward.clients.gemini.GeminiClient
 model_name: gemini-2.5-pro
 rpm: 30
+# To use Gemini API key without Vertex AI, set use_vertex_ai 
+# to false and ensure GEMINI_API_KEY is set in your .env file. 
+# If use_vertex_ai is true, the code will attempt to use 
+# Vertex AI for authentication and API access, which requires
+# additional setup.
+use_vertex_ai: false
