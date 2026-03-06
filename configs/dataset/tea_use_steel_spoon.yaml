@@ -1,0 +1,7 @@
+name: tea_use_steel_spoon
+dataset_name: null
+root: ~/.cache/huggingface/lerobot/qrafty-ai/tea_use_steel_spoon_lerobot/
+camera_index: 2
+max_episodes: 50
+num_frames: 15
+num_context_episodes: 2

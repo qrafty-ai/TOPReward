@@ -108,3 +108,6 @@ specs/
 # AI2-internal infrastructure scripts
 # =============================================================================
 gantry_*.sh
+# pixi environments
+.pixi/*
+!.pixi/config.toml

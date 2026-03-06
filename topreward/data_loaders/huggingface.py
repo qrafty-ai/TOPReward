@@ -1,8 +1,30 @@
+"""HuggingFace/LeRobot data loader for TOPReward.
+
+This module provides data loading from LeRobot datasets, supporting both:
+- HuggingFace Hub datasets (requires authentication for private/gated datasets)
+- Local datasets (load directly from disk without Hub access)
+
+For local datasets:
+- Provide the ``root`` parameter pointing to the local dataset directory
+- Optionally provide ``dataset_name`` as repo_id (e.g. ``org/dataset``)
+- If ``dataset_name`` is omitted, repo_id is inferred from local path
+
+Example usage:
+    # From HuggingFace Hub
+    loader = HuggingFaceDataLoader(dataset_name="lerobot/aloha_static_coffee")
+
+    # From local path (no Hub access needed)
+    loader = HuggingFaceDataLoader(root="/path/to/local/dataset")
+"""
+
+import os
+from pathlib import Path
+from typing import Any
+
 import numpy as np
 from datasets.utils.logging import disable_progress_bar
-from lerobot.datasets.lerobot_dataset import LeRobotDataset, LeRobotDatasetMetadata
-from lerobot.datasets.push_dataset_to_hub.utils import calculate_episode_data_index
 from loguru import logger
+from numpy.typing import NDArray
 
 from topreward.data_loaders.base import BaseDataLoader
 from topreward.utils.data_types import Episode
@@ -13,7 +35,11 @@ disable_progress_bar()
 
 
 class HuggingFaceDataLoader(BaseDataLoader):
-    """Load episodes from LeRobot datasets hosted on Hugging Face.
+    """Load episodes from LeRobot datasets.
+
+    Supports both HuggingFace Hub datasets and local datasets.
+    For local datasets, provide ``root`` path. ``dataset_name`` is optional and,
+    when provided, is used as the repo_id for LeRobot APIs.
 
     Produces a FewShotInput with one eval episode and up to ``num_context_episodes``
     sampled from the remaining pool. Frame count is controlled by ``num_frames``.
@@ -22,7 +48,8 @@ class HuggingFaceDataLoader(BaseDataLoader):
     def __init__(
         self,
         *,
-        dataset_name: str,
+        dataset_name: str | None = None,
+        root: str | None = None,
         camera_index: int = 0,
         num_frames: int = 20,
         num_context_episodes: int = 2,
@@ -39,25 +66,73 @@ class HuggingFaceDataLoader(BaseDataLoader):
             seed=seed,
         )
         self.dataset_name = dataset_name
+        self.root = os.path.expanduser(root) if root else None
         self.camera_index = int(camera_index)
         self.sampling_method = sampling_method
         self.anchoring = anchoring
 
         # Load dataset once (optimization #1: single dataset instance)
-        logger.info(f"Loading dataset: {dataset_name}")
-        self._dataset = LeRobotDataset(dataset_name, force_cache_sync=True)
-        self.ds_meta = LeRobotDatasetMetadata(dataset_name, force_cache_sync=True)
+        if self.root:
+            logger.info(f"Loading dataset from local path: {self.root}")
+            self._load_local_dataset(dataset_name)
+        else:
+            if not dataset_name:
+                raise ValueError("Either 'root' (local path) or 'dataset_name' (Hub repo) must be provided")
+            logger.info(f"Loading dataset from HuggingFace Hub: {dataset_name}")
+            self._load_hub_dataset(dataset_name)
 
         # Get total episodes
         self.max_episodes = min(max_episodes or self.ds_meta.total_episodes, self.ds_meta.total_episodes)
 
         # Pre-compute episode boundaries
+        from lerobot.datasets.push_dataset_to_hub.utils import calculate_episode_data_index
+
         self._episode_data_index = calculate_episode_data_index(self._dataset.hf_dataset)
         logger.info(f"Pre-computed episode boundaries for {self.max_episodes} episodes")
 
         # Deterministic episode order
         self._all_episodes_indices = list(range(self.max_episodes))
         self._cursor = 0
+
+    @staticmethod
+    def _infer_repo_id_from_root(root: Path) -> str:
+        if root.parent == root:
+            raise ValueError(f"Could not infer repo_id from local root path: {root}")
+        return f"{root.parent.name}/{root.name}"
+
+    def _load_local_dataset(self, dataset_name: str | None) -> None:
+        from lerobot.datasets.lerobot_dataset import LeRobotDataset, LeRobotDatasetMetadata
+
+        if self.root is None:
+            raise ValueError("Local loading requires 'root' to be set")
+
+        root_path = Path(self.root)
+        if not (root_path / "meta" / "info.json").exists():
+            raise FileNotFoundError(
+                f"LeRobot metadata not found at '{root_path / 'meta' / 'info.json'}'. Expected a local dataset root containing data/, meta/, and videos/."
+            )
+
+        repo_id = dataset_name or self._infer_repo_id_from_root(root_path)
+        logger.info(f"Using local LeRobot dataset repo_id='{repo_id}' root='{root_path}'")
+
+        self._dataset = LeRobotDataset(
+            repo_id=repo_id,
+            root=root_path,
+            force_cache_sync=False,
+            download_videos=False,
+        )
+        self.ds_meta = LeRobotDatasetMetadata(
+            repo_id=repo_id,
+            root=root_path,
+            force_cache_sync=False,
+        )
+
+    def _load_hub_dataset(self, dataset_name: str) -> None:
+        """Load dataset from HuggingFace Hub."""
+        from lerobot.datasets.lerobot_dataset import LeRobotDataset, LeRobotDatasetMetadata
+
+        self._dataset = LeRobotDataset(dataset_name, force_cache_sync=True)
+        self.ds_meta = LeRobotDatasetMetadata(dataset_name)
 
     @property
     def fps(self) -> float:
@@ -68,7 +143,7 @@ class HuggingFaceDataLoader(BaseDataLoader):
     def total_episodes(self) -> int:
         return int(self.max_episodes)
 
-    def _load_episode_frames(self, episode_index: int) -> tuple[list, str]:
+    def _load_episode_frames(self, episode_index: int) -> tuple[list[NDArray[Any]], str]:
         """Load frames using batch video decoding for improved performance.
 
         Args:
@@ -137,7 +212,7 @@ class HuggingFaceDataLoader(BaseDataLoader):
             episode_index = self._all_episodes_indices[self._cursor]
             self._cursor += 1
 
-        logger.info(f"Loading episode {episode_index} from {self.dataset_name}")
+        logger.info(f"Loading episode {episode_index} from {self.dataset_name or 'local dataset'}")
         frames, instruction = self._load_episode_frames(episode_index)
         eval_ep = self._build_episode(
             frames=frames, instruction=instruction, episode_index=episode_index, sampling_method=self.sampling_method, anchoring=self.anchoring
